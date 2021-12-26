@@ -4,12 +4,15 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="DXSample.cpp" />
-    <ClCompile Include="Win32Application.cpp" />
+    <ClCompile Include="Win64Application.cpp" />
+    <ClCompile Include="D3D12HelloWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="DXSample.h" />
     <ClInclude Include="DXSampleHelper.h" />
-    <ClInclude Include="Win32Application.h" />
+    <ClInclude Include="Win64Application.h" />
+    <ClInclude Include="D3D12HelloWindow.h" />
+    <ClInclude Include="d3dx12.h" />
   </ItemGroup>
 </Project>
