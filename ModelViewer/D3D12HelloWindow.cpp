@@ -86,7 +86,18 @@ void D3D12HelloWindow::LoadPipeline()
 
     _frameIndex = _swapChain->GetCurrentBackBufferIndex();
 
+    LoadPipelineRTV();
+    //LoadPipelineDSV();
+    
+    
+
+    ThrowIfFailed(_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_commandAllocator)));
+}
+
+void D3D12HelloWindow::LoadPipelineRTV()
+{
     // Create descriptor heaps.
+    // desciptor heap은 gpu가 리소스에 접근하는 방법을 제공한다.
     {
         // Describe and create a render target view (RTV) descriptor heap.
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -106,12 +117,20 @@ void D3D12HelloWindow::LoadPipeline()
         // Create a RTV for each frame.
         for (UINT n = 0; n < FrameCount; n++)
         {
+            // swap_chain의 버퍼를 가지고 온다.
             ThrowIfFailed(_swapChain->GetBuffer(n, IID_PPV_ARGS(&_renderTargets[n])));
-            _device->CreateRenderTargetView(_renderTargets[n].Get(), nullptr, rtvHandle);
+            // 해당 버퍼를 가지고 렌더 타겟 뷰를 만든다ㅣ
+            _device->CreateRenderTargetView(
+                _renderTargets[n].Get(),
+                nullptr,
+                rtvHandle);
             rtvHandle.Offset(1, _rtvDescriptorSize);
         }
     }
-    
+}
+
+void D3D12HelloWindow::LoadPipelineDSV()
+{
     // Create descripter heaps.
     {
         // Describe and create a depth stencil view (DSV) descriptor heap.
@@ -125,7 +144,7 @@ void D3D12HelloWindow::LoadPipeline()
 
     // Create frame resource.
     {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandel(_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 
         // Create a DSV
         D3D12_RESOURCE_DESC dsvDesc = {};
@@ -139,14 +158,67 @@ void D3D12HelloWindow::LoadPipeline()
         dsvDesc.SampleDesc.Count = 1;
         dsvDesc.Width = _width;
         dsvDesc.Height = _height;
-    }
 
-    ThrowIfFailed(_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_commandAllocator)));
+    }
 }
 
 // Load the sample assets.
 void D3D12HelloWindow::LoadAssets()
 {
+    // Create an empty Root Signature
+    {
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init_1_1(
+            0u,                                                                 // num parameter
+            nullptr,                                                            // pParameters
+            0u,                                                                 // numStaticSamplers
+            nullptr,                                                            // pStaticSamplers
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+        ComPtr<ID3DBlob> signature;
+        ComPtr<ID3DBlob> error;
+
+        ThrowIfFailed(D3D12SerializeVersionedRootSignature(
+            &rootSignatureDesc,
+            signature.GetAddressOf(),
+            error.GetAddressOf()
+        ));
+
+        ThrowIfFailed(_device->CreateRootSignature(
+            0,
+            signature.Get(),
+            signature->GetBufferSize(),
+            IID_PPV_ARGS(_rootSignature.GetAddressOf())
+        ));
+    }
+
+    // Create the Pipeline State, whic includes compiling and loading shaders.
+    {
+        ComPtr<ID3DBlob> vertexShader;
+        ComPtr<ID3DBlob> pixelShader;
+#if defined(_DEBUG)
+        // Enable better shader debugging with the graphics debugging tools.
+        UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+        UINT compileFlags = 0;
+
+#endif
+        ThrowIfFailed(D3DCompileFromFile(
+            GetAssetFullPath(L"shaders.hlsl").c_str(),
+            nullptr,
+            nullptr, 
+            "VSMain",
+            "vs_5_0", 
+            compileFlags, 0, &vertexShader, nullptr));
+        ThrowIfFailed(D3DCompileFromFile(
+            GetAssetFullPath(L"shaders.hlsl").c_str(),
+            nullptr,
+            nullptr,
+            "PSMain",
+            "ps_5_0",
+            compileFlags, 0, &pixelShader, nullptr));
+    }
+
     // Create the command list.
     ThrowIfFailed(_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_commandList)));
 

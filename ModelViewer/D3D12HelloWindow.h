@@ -47,6 +47,8 @@ private: ComPtr<ID3D12DescriptorHeap> _dsvHeap;
 private: ComPtr<ID3D12PipelineState> _pipelineState;
 private: ComPtr<ID3D12GraphicsCommandList> _commandList;
 
+private: ComPtr<ID3D12RootSignature> _rootSignature;
+
 private: UINT _rtvDescriptorSize;
 private: UINT _dsvDescriptorSize;
 
@@ -58,7 +60,13 @@ private: UINT64 _fenceValue;
 
 
 private: void LoadPipeline();
+
+private: void LoadPipelineRTV();
+private: void LoadPipelineDSV();
+
 private: void LoadAssets();
+
+
 private: void PopulateCommandList();
 private: void WaitForPreviousFrame();
 };
