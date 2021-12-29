@@ -50,7 +50,12 @@ private: ComPtr<ID3D12GraphicsCommandList> _commandList;
 private: ComPtr<ID3D12RootSignature> _rootSignature;
 
 private: UINT _rtvDescriptorSize;
-private: UINT _dsvDescriptorSize;
+//private: UINT _dsvDescriptorSize;
+
+    // App objects
+private: ComPtr<ID3D12Resource> _vertexBuffer;
+
+
 
     // Synchronization objects.
 private: UINT _frameIndex;

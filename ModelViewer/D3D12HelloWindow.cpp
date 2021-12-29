@@ -15,7 +15,9 @@
 D3D12HelloWindow::D3D12HelloWindow(UINT width, UINT height, std::wstring name) :
     DXSample(width, height, name),
     _frameIndex(0),
-    _rtvDescriptorSize(0)
+    _rtvDescriptorSize(0),
+    _fenceValue(0),
+    _fenceEvent(nullptr)
 {
 }
 
@@ -221,10 +223,60 @@ void D3D12HelloWindow::LoadAssets()
 
     // Create the command list.
     ThrowIfFailed(_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_commandList)));
-
     // Command lists are created in the recording state, but there is nothing
     // to record yet. The main loop expects it to be closed, so close it now.
     ThrowIfFailed(_commandList->Close());
+
+    {
+        /*
+        virtual HRESULT STDMETHODCALLTYPE CreateCommittedResource( 
+            _In_  const D3D12_HEAP_PROPERTIES *pHeapProperties,
+            D3D12_HEAP_FLAGS HeapFlags,
+            _In_  const D3D12_RESOURCE_DESC *pDesc,
+            D3D12_RESOURCE_STATES InitialResourceState,
+            _In_opt_  const D3D12_CLEAR_VALUE *pOptimizedClearValue,
+            REFIID riidResource,
+            _COM_Outptr_opt_  void **ppvResource) = 0;
+        */
+
+        /*
+          {
+            D3D12_HEAP_TYPE Type;
+            D3D12_CPU_PAGE_PROPERTY CPUPageProperty;
+            D3D12_MEMORY_POOL MemoryPoolPreference;
+            UINT CreationNodeMask;
+            UINT VisibleNodeMask;
+           } 	D3D12_HEAP_PROPERTIES;
+        */
+      
+
+        D3D12_HEAP_PROPERTIES heapProperties = {};
+        heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapProperties.CreationNodeMask = 0; // 0 ==> 1
+        heapProperties.VisibleNodeMask = 0; //  0 ==> 1
+
+        // TODO
+        D3D12_RESOURCE_DESC resourceDesc = {};
+        resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        resourceDesc.Alignment = 0;// 
+        resourceDesc.DepthOrArraySize = 3;
+
+        _device->CreateCommittedResource(
+            &heapProperties,
+            D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS,
+            _vertexBuffer.GetAddressOf(),
+
+        )
+        // Create the vertex buffer
+        {
+            // Define t
+        }
+
+    }
+
+
 
     // Create synchronization objects.
     {
